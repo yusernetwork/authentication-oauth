@@ -3,7 +3,7 @@ const axios = require('axios');
 const bodyParser = require('body-parser');
 
 const feathers = require('@feathersjs/feathers');
-const { Service } = require('@feathersjs/commons/lib/test/fixture');
+const { Service } = require('@feathersjs/tests/lib/fixture');
 const { BadRequest } = require('@feathersjs/errors');
 
 const expressify = require('../../lib');

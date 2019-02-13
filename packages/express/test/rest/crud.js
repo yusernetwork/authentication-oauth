@@ -1,6 +1,6 @@
 const assert = require('assert');
 const axios = require('axios');
-const { verify } = require('@feathersjs/commons/lib/test/fixture');
+const { verify } = require('@feathersjs/tests/lib/fixture');
 
 module.exports = function crud (description, name) {
   describe(description, () => {
