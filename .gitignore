@@ -49,3 +49,4 @@ packages/configuration/lib
 packages/commons/lib
 packages/tests/lib
 packages/transport-commons/lib
+packages/koa/lib

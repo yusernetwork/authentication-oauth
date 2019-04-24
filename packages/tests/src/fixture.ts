@@ -18,11 +18,11 @@ export const Service = {
   },
 
   get (name: string, params: any) {
-    if (params.query.error) {
+    if (params.query && params.query.error) {
       return Promise.reject(new Error(`Something for ${name} went wrong`));
     }
 
-    if (params.query.runtimeError) {
+    if (params.query && params.query.runtimeError) {
       // @ts-ignore
       thingThatDoesNotExist(); // eslint-disable-line
     }

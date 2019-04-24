@@ -13,6 +13,12 @@ describe('app.router', () => {
         return Promise.resolve({ id });
       }
     });
+
+    app.use('/', {
+      get (id: string|number) {
+        return Promise.resolve({ id });
+      }
+    });
   });
 
   it('does nothing when configured twice', () => {
@@ -49,6 +55,15 @@ describe('app.router', () => {
     assert.strictEqual(result.service, app.service('/my/service'));
     assert.deepStrictEqual(result.params, {
       __id: '1234'
+    });
+  });
+
+  it('can look up id on root path', () => {
+    const result = app.lookup('/7776');
+
+    assert.strictEqual(result.service, app.service('/'));
+    assert.deepStrictEqual(result.params, {
+      __id: '7776'
     });
   });
 

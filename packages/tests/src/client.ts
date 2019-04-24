@@ -12,13 +12,13 @@ export function setupTests (app: any, name: string) {
 
   describe('Service base tests', () => {
     it('.find', () => {
-      return getService().find().then((todos: Todo[]) =>
+      return getService().find().then((todos: Todo[]) => {
         assert.deepEqual(todos, [{ // eslint-disable-line
           text: 'some todo',
           complete: false,
           id: 0
-        }])
-      );
+        }]);
+      });
     });
 
     it('.get and params passing', () => {

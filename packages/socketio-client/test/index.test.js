@@ -66,9 +66,11 @@ describe('@feathersjs/socketio-client', () => {
   });
 
   it('return 404 for non-existent service', () => {
-    return app.service('not-me').create({}).catch(e =>
-      assert.strictEqual(e.message, 'Service \'not-me\' not found')
-    );
+    return app.service('not/me').create({})
+      .then(() => assert.fail('Should never get here'))
+      .catch(e =>
+        assert.strictEqual(e.message, 'Service \'not/me\' not found')
+      );
   });
 
   baseTests(app, 'todos');
