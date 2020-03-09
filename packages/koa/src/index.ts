@@ -3,16 +3,18 @@ import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import { Application as FeathersApplication, Service } from '@feathersjs/feathers';
 import { routing } from '@feathersjs/transport-commons';
+import { parseAuthentication } from './authenticate';
+import { errorHandler } from './error-handler';
 
 const debug = Debug('@feathersjs/koa');
 
 export type Application<T = any> = Koa & FeathersApplication<T>;
 
 export { rest } from './rest';
-export { Koa, bodyParser };
+export { Koa, bodyParser, errorHandler };
 
 export function koa (feathersApp?: FeathersApplication): Application<any> {
-  const app = new Koa();
+  const app = Object.create(new Koa());
 
   if (!feathersApp) {
     return app as Application<any>;
@@ -62,6 +64,7 @@ export function koa (feathersApp?: FeathersApplication): Application<any> {
 
     return next();
   });
+  feathersKoa.use(parseAuthentication());
 
   return feathersKoa;
 }

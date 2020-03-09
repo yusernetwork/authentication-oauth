@@ -1,4 +1,5 @@
 import { FeathersKoaContext } from './utils';
+import { Next } from 'koa';
 
 export const methodMap: { [key: string]: any } = {
   POST: 'create',
@@ -34,7 +35,7 @@ export const getArguments = (method: string, id: any, data: any, params: any) =>
   return args;
 };
 
-export const rest = () => async (ctx: FeathersKoaContext, next: () => Promise<any>) => {
+export const rest = () => async (ctx: FeathersKoaContext, next: Next) => {
   const { app, request } = ctx;
   const { query, path, method: httpMethod } = request;
   const lookup = app.lookup(path);
