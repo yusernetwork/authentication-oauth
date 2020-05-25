@@ -1,25 +1,17 @@
-// @ts-ignore
-import Proto from 'uberproto';
 import { _ } from '@feathersjs/commons';
-import Application from './application';
+
 import version from './version';
+import { Feathers } from './application';
+import { Application } from './declarations';
 
-const baseObject = Object.create(null);
-
-export function feathers () {
-  const app = Object.create(baseObject);
-
-  // Mix in the base application
-  Proto.mixin(Application, app);
-
-  app.init();
-
-  return app;
+export function feathers<T = {}, S = {}> () {
+  return new Feathers<T, S>() as any as Application<T, S>;
 }
 
-export { version };
+export { version, Feathers };
 export * from './declarations';
-export * from './hooks/index';
+export * from './service';
+// export * from './hooks/index';
 
 if (typeof module !== 'undefined') {
   module.exports = Object.assign(feathers, module.exports);

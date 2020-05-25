@@ -1,87 +1,47 @@
-// @ts-ignore
-import Proto from 'uberproto';
+import { NextFunction } from '@feathersjs/hooks';
 import { EventEmitter } from 'events';
-import { HookContext, Service, Application } from './declarations';
 
-// Returns a hook that emits service events. Should always be
-// used as the very last hook in the chain
-export function eventHook () {
-  return function (ctx: HookContext) {
-    const { app, service, method, event, type, result } = ctx;
-    const eventName = event === null ? event : (app as any).eventMappings[method];
-    const isHookEvent = service._hookEvents && service._hookEvents.indexOf(eventName) !== -1;
+import { Service, HookContext } from './declarations';
+import { SERVICE, getServiceOptions } from './service';
 
-    // If this event is not being sent yet and we are not in an error hook
-    if (eventName && isHookEvent && type !== 'error') {
-      const results = Array.isArray(result) ? result : [ result ];
+export async function eventHook (context: HookContext, next: NextFunction) {
+  const { methods, events } = getServiceOptions(context.service);
+  const value = (methods as any)[context.method];
 
-      results.forEach(element => service.emit(eventName, element, ctx));
-    }
-  };
-};
-
-// Mixin that turns a service into a Node event emitter
-export function eventMixin (this: Application, service: Service<any>) {
-  if (service._serviceEvents) {
-    return;
+  // If there is one configured, set the event on the context
+  // So actual emitting the event can be disabled within the hook chain
+  if (value.event) {
+    context.event = value.event;
   }
 
-  const app = this;
-  // Indicates if the service is already an event emitter
+  await next();
+
+  // Send the event only if the service does not do so already (indicated in the `events` option)
+  // This is used for custom events and for client services receiving event from the server
+  if (typeof context.event === 'string' && !events.includes(context.event)) {
+    const results = Array.isArray(context.result) ? context.result : [ context.result ];
+
+    results.forEach(element => context.service.emit(context.event, element, context));
+  }
+}
+
+export function eventMixin (service: Service<any>, _path: string, _options?: any) {
+  const { methods } = (service as any)[SERVICE];
   const isEmitter = typeof service.on === 'function' &&
     typeof service.emit === 'function';
+  // We register the event hook on every configured service method
+  // Usually not necessayr but it does allow for the configuration to be changed later
+  const eventHooks = Object.keys(methods).reduce((result, key) => {
+    result[key] = [ eventHook ];
 
-  // If not, mix it in (the service is always an Uberproto object that has a .mixin)
-  if (typeof service.mixin === 'function' && !isEmitter) {
-    service.mixin(EventEmitter.prototype);
+    return result;
+  }, {} as any);
+
+  if (!isEmitter) {
+    Object.assign(service, EventEmitter.prototype);
   }
+  
+  service.hooks(eventHooks);
 
-  // Define non-enumerable properties of
-  Object.defineProperties(service, {
-    // A list of all events that this service sends
-    _serviceEvents: {
-      value: Array.isArray(service.events) ? service.events.slice() : []
-    },
-
-    // A list of events that should be handled through the event hooks
-    _hookEvents: {
-      value: []
-    }
-  });
-
-  // `app.eventMappings` has the mapping from method name to event name
-  Object.keys(app.eventMappings).forEach(method => {
-    const event = app.eventMappings[method];
-    const alreadyEmits = service._serviceEvents.indexOf(event) !== -1;
-
-    // Add events for known methods to _serviceEvents and _hookEvents
-    // if the service indicated it does not send it itself yet
-    if (typeof service[method] === 'function' && !alreadyEmits) {
-      service._serviceEvents.push(event);
-      service._hookEvents.push(event);
-    }
-  });
-};
-
-export default function () {
-  return function (app: any) {
-    // Mappings from service method to event name
-    Object.assign(app, {
-      eventMappings: {
-        create: 'created',
-        update: 'updated',
-        remove: 'removed',
-        patch: 'patched'
-      }
-    });
-
-    // Register the event hook
-    // `finally` hooks always run last after `error` and `after` hooks
-    app.hooks({ finally: eventHook() });
-
-    // Make the app an event emitter
-    Proto.mixin(EventEmitter.prototype, app);
-
-    app.mixins.push(eventMixin);
-  };
-};
+  return service;
+}
