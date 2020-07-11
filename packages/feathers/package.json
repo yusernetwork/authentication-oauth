@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@feathersjs/commons": "^5.0.0-pre.0",
-    "@feathersjs/hooks": "^0.5.0-alpha.0",
+    "@feathersjs/hooks": "^0.5.0",
     "debug": "^4.1.1",
     "events": "^3.1.0",
     "uberproto": "^2.0.6"

@@ -5,37 +5,37 @@ type ServiceMethodOptions = ServiceOptions<any>['methods'];
 
 export const SERVICE = createSymbol('@feathersjs/service');
 
+export const defaultServiceArguments: { [key: string]: string[] } = {
+  find: [ 'params' ],
+  get: [ 'id', 'params' ],
+  create: [ 'data', 'params' ],
+  update: [ 'id', 'data', 'params' ],
+  patch: [ 'id', 'data', 'params' ],
+  remove: [ 'id', 'params' ],
+  setup: ['app', 'path'],
+  default: ['data', 'params']
+}
+
 export const defaultServiceMethods: ServiceMethodOptions = {
-  find: {
-    arguments: [ 'params' ],
-    external: true
-  },
-  get: {
-    arguments: [ 'id', 'params' ],
-    external: true
-  },
+  find: { external: true },
+  get: { external: true },
   create: {
-    arguments: [ 'data', 'params' ],
     event: 'created',
     external: true
   },
   update: {
-    arguments: [ 'id', 'data', 'params' ],
     event: 'updated',
     external: true
   },
   patch: {
-    arguments: [ 'id', 'data', 'params' ],
     event: 'patched',
     external: true
   },
   remove: {
-    arguments: [ 'id', 'params' ],
     event: 'removed',
     external: true
   },
   setup: {
-    arguments: ['app', 'path'],
     external: false
   }
 };

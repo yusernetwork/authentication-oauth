@@ -1,6 +1,5 @@
 import Debug from 'debug';
 import { EventEmitter } from 'events';
-import { HookManager } from '@feathersjs/hooks';
 import { stripSlashes } from '@feathersjs/commons';
 
 import version from './version';
@@ -25,7 +24,6 @@ export class Feathers<ServiceTypes, AppSettings> implements FeathersApplication<
   settings: AppSettings = ({} as AppSettings);
   mixins: ServiceMixin[] = [ hookMixin, eventMixin ];
   version: string = version;
-  HookManager: new () => HookManager;
 
   private _isSetup: boolean = false;
 

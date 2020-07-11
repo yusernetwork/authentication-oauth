@@ -384,7 +384,7 @@ describe('Feathers application', () => {
   // });
 
   describe('sub apps', () => {
-    it.skip('re-registers sub-app services with prefix', async () => {
+    it('re-registers sub-app services with prefix', async () => {
       const app = feathers();
       const subApp = feathers();
 

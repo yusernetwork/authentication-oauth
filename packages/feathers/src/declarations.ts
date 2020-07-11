@@ -175,7 +175,7 @@ export interface HookContext<T = any, A = FeathersApplication, S = Service<T>> {
   /**
    * A read only property with the hook type (one of before, after or error).
    */
-  readonly type: 'before' | 'after' | 'error';
+  readonly type: 'before' | 'after' | 'error' | 'async';
   /**
    * A writeable property containing the data of a create, update and patch service
    * method call.
@@ -234,9 +234,11 @@ export type HookMap<T, A, S, H = Hook<T, A, S>> = {
 }
 
 export interface HooksObject<T, A, S> {
+  async: Partial<HookMap<T, A, S, AsyncHook<T, A, S>>> | AsyncHook<T, A, S>[];
   before: Partial<HookMap<T, A, S>> | Hook<T, A, S>[];
   after: Partial<HookMap<T, A, S>> | Hook<T, A, S>[];
   error: Partial<HookMap<T, A, S>> | Hook<T, A, S>[];
 }
 
-export type HookSettings<T, A, S> = HooksObject<T, A, S>|HookMap<T, A, S, AsyncHook<T, A, S>>;
+export type HookSettings<T, A, S> = Partial<HooksObject<T, A, S>>|
+  Partial<HookMap<T, A, S, AsyncHook<T, A, S>>>;

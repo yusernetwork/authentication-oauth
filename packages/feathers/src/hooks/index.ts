@@ -1,49 +1,103 @@
-import { Middleware, HookManager, hooks, HookContext } from '@feathersjs/hooks';
+import { HookManager, hooks, Middleware, HookContext, NextFunction } from '@feathersjs/hooks';
 import { Service, ServiceOptions, Application } from '../declarations';
+import { defaultServiceArguments } from '../service';
+import { eventHook } from '../events';
 
-export class ServiceHookManager<A> extends HookManager {
+export class FeathersHookManager<A> extends HookManager {
   app: A;
+  // Hooks that should always run before any other
+  coreMiddleware: Middleware[];
 
-  constructor (app: A) {
+  constructor (app: A, first: Middleware[]) {
     super();
     this.app = app;
+    this.coreMiddleware = first;
   }
-
-  getMiddleware (): Middleware[] {
-    return super.getMiddleware();
-  }
-
-  initializeContext (self: any, args: any[], context: HookContext): HookContext {
-    const ctx = this._parent ? this._parent.initializeContext(self, args, context) : context;
-
-    ctx.arguments = args;
-
-    return ctx;
+  
+  collectMiddleware (self: any, args: any[]) {
+    return this.coreMiddleware.concat(super.collectMiddleware(self, args));
   }
 }
 
-export function hookMixin (this: Application, service: Service<any>, path: string, options: ServiceOptions<any>) {
-  if (typeof service.hooks !== 'function') {
-    const app = this;
-    const hookMap = Object.keys(options.methods).reduce((res, name) => {
-      const value = options.methods[name];
-
-      res[name] = new ServiceHookManager(app).params(...value.arguments).props({
-        path,
-        service,
-        app
-      });
-
-      return res;
-    }, {} as any);
-
-    hooks(service, hookMap);
-
-    Object.defineProperty(service, 'hooks', {
+export function getFeathersHook ({ app, service, method, path }: {
+  service: Service<any>;
+  app: Application;
+  method: string;
+  path: string;
+}) {
+  const args = defaultServiceArguments[method] || defaultServiceArguments.default;
+  // The base properties to define on the context
+  const baseProperties: PropertyDescriptorMap = {
+    app: {
+      value: app
+    },
+    service: {
+      value: service
+    },
+    method: {
       enumerable: true,
-      value (this: any, hookMap: any) {
-        hooks(this, hookMap);
+      writable: true,
+      value: method
+    },
+    path: {
+      enumerable: true,
+      value: path
+    }
+  };
+  // Add method arguments (based on `arguments` array)
+  const properties = args.reduce((result, name, index) => {
+    result[name] = {
+      enumerable: true,
+      get (this: any) {
+        return this?.arguments[index];
+      },
+      set (this: any, value: any) {
+        if (!this.arguments) {
+          this.arguments = new Array(args.length);
+        }
+
+        this.arguments[index] = value;
       }
-    });
+    }
+
+    return result;
+  }, baseProperties);
+
+  return async function feathersHook (context: HookContext, next: NextFunction) {
+    Object.defineProperties(context, properties);
+    context.params = context.params || {};
+    await next();
   }
+}
+
+export const protectedMethods = [
+  'all', 'hooks', 'publish', 'on', 'emit', 'removeListener', 'removeAllListeners'
+];
+
+export function hookMixin (
+  this: Application, service: Service<any>, path: string, options: ServiceOptions<any>
+) {
+  if (typeof service.hooks === 'function') {
+    return service;
+  }
+
+  const app = this;
+  const hookMap = Object.keys(options.methods).reduce((res, method) => {
+    if (protectedMethods.includes(method)) {
+      throw new Error(`'${method}' is not a valid service method name`);
+    }
+    
+    const feathersHook = getFeathersHook({ app, service, method, path });
+
+    res[method] = new FeathersHookManager(app, [
+      feathersHook,
+      eventHook
+    ]);
+
+    return res;
+  }, {} as any);
+
+  hooks(service, hookMap);
+
+  return service;
 }
