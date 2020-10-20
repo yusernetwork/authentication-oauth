@@ -41,7 +41,7 @@
   ],
   "scripts": {
     "start": "ts-node test/app",
-    "prepublish": "npm run compile",
+    "prepare": "npm run compile",
     "compile": "shx rm -rf lib/ && tsc",
     "test": "mocha --config ../../.mocharc.ts.json --recursive test/**.test.ts test/**/*.test.ts"
   },
