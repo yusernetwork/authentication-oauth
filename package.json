@@ -1,7 +1,7 @@
 {
   "name": "@feathersjs/authentication-oauth",
   "description": "oAuth 1 and 2 authentication for Feathers. Powered by Grant.",
-  "version": "4.5.9",
+  "version": "4.5.9-grant5",
   "homepage": "https://feathersjs.com",
   "main": "lib/",
   "types": "lib/",
